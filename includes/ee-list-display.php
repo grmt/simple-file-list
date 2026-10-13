@@ -305,9 +305,9 @@ if( $eeAdmin ) {
 if( isset($_POST['eeSFL_Upload']) ) { // isset($_POST['eeSFLS_Searching']) OR
 	// Verify nonce for upload form submission (Missing nonce security)
 	if (!wp_verify_nonce(isset($_POST['ee-simple-file-list-upload-form-nonce']) ? sanitize_text_field(wp_unslash($_POST['ee-simple-file-list-upload-form-nonce'])) : '', 'ee-simple-file-list-upload-form') && !is_admin()) {
-		// Skip upload confirmation processing if nonce verification fails
+		// Skip upload confirmation processing if nonce verification fails.
+		// SECURITY: keep $eeShowOps as decided above — forcing it on exposed the management bar to any visitor.
 		$eeShowingResults = FALSE;
-		$eeShowOps = TRUE;
 	} else {
 		$eeShowingResults = TRUE;
 		$eeShowOps = FALSE;
