@@ -55,6 +55,18 @@ if( isset($_POST['eeSFL_ListOpsBarGo']) ) {
 		} else { exit('ERROR 98 - Front-End File Ops Action Taken'); }
 	}
 
+	// SECURITY: A valid nonce only proves the form came from this site, not that the visitor may manage files.
+	// Front-end visitors may only download (when bulk download is enabled) unless front-end management is on.
+	if($eeProceed && !$eeAdmin && !current_user_can('manage_options')) {
+		$eeCanManage = $eeSFL->eeListSettings['AllowFrontManage'] == 'YES';
+		$eeCanDownload = $eeCanManage || $eeSFL->eeListSettings['AllowBulkFileDownload'] == 'YES'
+			|| ( isset($_POST['eeSFL_DownloadFolderForm']) && ($eeSFL->eeListSettings['AllowFolderDownload'] ?? '') == 'YES' );
+		if( $fileOpsAction == 'Download' ? !$eeCanDownload : !$eeCanManage ) {
+			eeSFL_Debug_Log("Bulk operation '" . $fileOpsAction . "' denied for front-end visitor");
+			exit('ERROR 97 - Not Allowed');
+		}
+	}
+
 	if($eeProceed) {
 
 		$eeZipObject = FALSE; // Zip File Object if Downloading

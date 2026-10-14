@@ -1716,7 +1716,8 @@ class eeSFL_MainClass {
 			$eeScreenshot = $eeThumbsPath . 'temp_' . $eeFileNameOnly . '.png';
 
 			// Create a full-sized image at the one-second mark
-			$eeCommand = 'ffmpeg -i ' . $eeFileFullPath . ' -ss 00:00:01.000 -vframes 1 ' . $eeScreenshot;
+			// SECURITY: escape paths — files placed in the list directory outside the uploader keep their raw names.
+			$eeCommand = 'ffmpeg -i ' . escapeshellarg($eeFileFullPath) . ' -ss 00:00:01.000 -vframes 1 ' . escapeshellarg($eeScreenshot);
 
 			shell_exec($eeCommand);
 
@@ -1790,7 +1791,8 @@ class eeSFL_MainClass {
 			if( !$temp_file_check['data'] ) { // Might be there already.
 
 				// Check PDF Validity
-				$eeCommand = 'gs -dNOPAUSE -dBATCH -sDEVICE=nullpage ' . $eeFileFullPath;
+				// SECURITY: escape paths — files placed in the list directory outside the uploader keep their raw names.
+				$eeCommand = 'gs -dNOPAUSE -dBATCH -sDEVICE=nullpage ' . escapeshellarg($eeFileFullPath);
 
 				// Run the Command. Drum roll please
 				exec( $eeCommand, $eeCommandOutput, $eeReturnVal );
@@ -1799,7 +1801,7 @@ class eeSFL_MainClass {
 
 					// The command. AVOID LINE BREAKS
 					// $eeCommand = 'gs -dNOPAUSE -sDEVICE=png16m -dGraphicsAlphaBits=' . $eeBits . ' -dTextAlphaBits=' . $eeBits . ' -r' . $eeResolution . ' -dFirstPage=1 -dLastPage=1 -sOutputFile=' . $eeTempFileFullPath . ' ' . $eeFileFullPath;
-					$eeCommand = 'gs -dNOPAUSE -sDEVICE=jpeg -dJPEGQ=' . $eeQuality . ' -dQFactor=' . $eeQFactor . ' -r' . $eeResolution . ' -dFirstPage=1 -dLastPage=1 -sOutputFile=' . $eeTempFileFullPath . ' ' . $eeFileFullPath;
+					$eeCommand = 'gs -dNOPAUSE -sDEVICE=jpeg -dJPEGQ=' . $eeQuality . ' -dQFactor=' . $eeQFactor . ' -r' . $eeResolution . ' -dFirstPage=1 -dLastPage=1 -sOutputFile=' . escapeshellarg($eeTempFileFullPath) . ' ' . escapeshellarg($eeFileFullPath);
 
 					// Run the Command. Drum roll please
 					exec( $eeCommand, $eeCommandOutput, $eeReturnVal );
@@ -2382,7 +2384,8 @@ class eeSFL_MainClass {
 			$eeFileListDirReal = realpath($eeSiteRoot . $this->eeListSettings['FileListDir']);
 			if ($eeFileListDirReal !== FALSE) {
 				$eeFileListDirReal = str_replace('\\', '/', $eeFileListDirReal);
-				if (strpos($eeRealPath, $eeFileListDirReal) !== 0) {
+				// Compare with a trailing slash so a sibling such as "simple-file-list-old/" doesn't pass as inside.
+				if (strpos(rtrim($eeRealPath, '/') . '/', rtrim($eeFileListDirReal, '/') . '/') !== 0) {
 					$this->eeUserMessages['errors'][] = 'Path is outside the configured file list directory.';
 					eeSFL_Debug_Log("FAILED: Real path is outside FileListDir", 'Security', $this->eeListID);
 				}

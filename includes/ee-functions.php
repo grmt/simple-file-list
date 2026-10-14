@@ -896,7 +896,7 @@ function eeSFL_DeleteFile($eeFileName, $eeSubFolder = FALSE) {
 	// Guards against path traversal in both $eeSubFolder (Pro) and $eeFileName.
 	$eeBaseDir = realpath(eeSFL_WP_ROOT . $eeSFL->eeListSettings['FileListDir']);
 	$eeRealPath = realpath($eeFilePath);
-	if( $eeBaseDir && $eeRealPath && strpos($eeRealPath, $eeBaseDir) !== 0 ) {
+	if( $eeBaseDir && $eeRealPath && strpos($eeRealPath, rtrim($eeBaseDir, '/') . '/') !== 0 ) { // Trailing slash: siblings like "simple-file-list-old/" are outside
 		eeSFL_Debug_Log("ERROR: Path traversal attempt blocked: '$eeFilePath'", 'FileOps', $eeSFL->eeListID);
 		return 'ERROR: Invalid path';
 	}
@@ -1208,6 +1208,9 @@ function eeSFL_RenameFile($eeFileName, $eeSubFolder, $eeFileNameNew, $eeListSett
 			'message' => __('Cannot Change the Name. Item with Same Name Found.', 'simple-file-list')
 		);
 	}
+
+	// SECURITY: the old name comes straight from POST — it must stay inside the list directory as well.
+	$eeSFL->eeSFL_DetectUpwardTraversal($eeListSettings['FileListDir'] . $eeSubFolderPath . $eeFileName );
 
 	// Rename file on disk
 	$eeFilePathOld = eeSFL_WP_ROOT . $eeListSettings['FileListDir'] . $eeSubFolderPath . $eeFileName;
