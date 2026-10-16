@@ -1,0 +1,14 @@
+# Development files that do not belong in the distributed plugin zip
+.git
+.github
+.gitignore
+.distignore
+vendor
+tests
+composer.json
+composer.lock
+phpunit.xml.dist
+phpcs.xml.dist
+.sonarcloud.properties
+coverage.xml
+.phpunit.cache
