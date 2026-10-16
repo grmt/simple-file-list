@@ -6,6 +6,8 @@
 
 console.log('ee-footer.js Loaded');
 
+var eeSFL_isTouchscreen; // Declared in ee-head.js
+
 // Upon page load completion...
 jQuery(document).ready(function() {
 

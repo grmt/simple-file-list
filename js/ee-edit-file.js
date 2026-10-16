@@ -4,6 +4,16 @@
 
 // console.log('ee-edit-file.js v7 Loaded');
 
+// Shared with ee-head.js / ee-back.js and the inline list scripts
+var eeSFL_SubFolder, eeSFL_FileID, eeSFL_ListID, eeSFL_FileDateAdded, eeSFL_FileDateChanged;
+
+// Carried from the edit modal to the save and AJAX handlers
+var eeSFL_FileNameOld, eeSFL_FileNiceNameOld, eeSFL_FileDescriptionOld;
+var eeSFL_FileDateAddedYearOld, eeSFL_FileDateAddedMonthOld, eeSFL_FileDateAddedDayOld;
+var eeSFL_FileDateChangedYearOld, eeSFL_FileDateChangedMonthOld, eeSFL_FileDateChangedDayOld;
+var eeSFL_FileNameNew, eeSFL_FileNiceNameNew, eeSFL_FileDescriptionNew;
+var eeSFL_FileDateAddedNew, eeSFL_FileDateChangedNew;
+
 // Move File Action ----
 
 // Populate the Select Input
@@ -26,7 +36,7 @@ function eeSFL_OpenMoveFileModal(eeSFL_FileID) {
 		jQuery('#eeSFL_Destination').append('<option value="/">' + eesfl_vars['eeMainFolderText'] + '</option>');
 	}
 
-	eeSFL_Destinations = eeSFL_FolderDestinations.split('|');
+	var eeSFL_Destinations = eeSFL_FolderDestinations.split('|');
 
 	var eeThisFilePath = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_FilePath').text();
 	var eeThisItem = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_RealFileName').text();
@@ -77,10 +87,10 @@ function eeSFL_FileDoMove() {
 	eeSFL_FileID = jQuery('#eeSFL_Modal_FileID').text();
 
 	// The File Name
-	eeSFL_FileName = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_RealFileName').text(); // Current File Name
+	var eeSFL_FileName = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_RealFileName').text(); // Current File Name
 
 	// Where are we going?
-	eeSFL_Destination = jQuery('#eeSFL_Destination').val();
+	var eeSFL_Destination = jQuery('#eeSFL_Destination').val();
 
 	if(eeSFL_Destination) {
 
@@ -120,7 +130,7 @@ function eeSFL_FileDoMove() {
 
 						eeThisID = eeThisID.replace(/\D/g, ''); // Get just the ID number
 
-						eeThisName = jQuery('#eeSFL_FileID-' + eeThisID + ' span.eeSFL_RealFileName').text();
+						var eeThisName = jQuery('#eeSFL_FileID-' + eeThisID + ' span.eeSFL_RealFileName').text();
 
 						if(eeSFL_Destination.indexOf(eeThisName) == 0 || eeSFL_Destination.indexOf(eeThisName) > 1) {
 
@@ -212,7 +222,7 @@ function eeSFL_OpenEditModal(eeSFL_FileID) {
 	eeSFL_FileDescriptionOld = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' .eeSFL_FileDesc').text();
 	jQuery('#eeSFL_FileDescriptionNew').val(eeSFL_FileDescriptionOld);
 
-	eeSFL_FileSize = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_FileSize').text();
+	var eeSFL_FileSize = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_FileSize').text();
 	jQuery('#eeSFL_FileSize').text(eeSFL_FileSize);
 
 	// Dates - Icky
@@ -221,7 +231,7 @@ function eeSFL_OpenEditModal(eeSFL_FileID) {
 	jQuery('#eeSFL_FileDateAdded').text(eeSFL_FileDateAdded);
 	eeSFL_FileDateAdded = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_FileDateAdded').text();
 
-	eeArrayDateAdded = eeSFL_FileDateAdded.split('-');
+	var eeArrayDateAdded = eeSFL_FileDateAdded.split('-');
 	eeSFL_FileDateAddedYearOld = eeArrayDateAdded[0];
 	eeSFL_FileDateAddedMonthOld = eeArrayDateAdded[1];
 	eeSFL_FileDateAddedDayOld = eeArrayDateAdded[2];
@@ -234,7 +244,7 @@ function eeSFL_OpenEditModal(eeSFL_FileID) {
 	jQuery('#eeSFL_FileDateChanged').text(eeSFL_FileDateChanged);
 	eeSFL_FileDateChanged = jQuery('#eeSFL_FileID-' + eeSFL_FileID + ' span.eeSFL_FileDateChanged').text();
 
-	eeArrayDateChanged = eeSFL_FileDateChanged.split('-');
+	var eeArrayDateChanged = eeSFL_FileDateChanged.split('-');
 	eeSFL_FileDateChangedYearOld = eeArrayDateChanged[0];
 	eeSFL_FileDateChangedMonthOld = eeArrayDateChanged[1];
 	eeSFL_FileDateChangedDayOld = eeArrayDateChanged[2];
@@ -287,7 +297,7 @@ function eeSFL_FileEditSaved() {
 				var eeExt = eeArray.pop();
 				var eeFileNameNew = '';
 
-				for(i = 0; i < eeArray.length; i++) {
+				for(var i = 0; i < eeArray.length; i++) {
 					eeFileNameNew += eeArray[i] + '-'; // Rebuild using dashes
 				}
 				eeFileNameNew = eeFileNameNew.substring(0, eeFileNameNew.length - 1); // Strip last dash
@@ -323,15 +333,16 @@ function eeSFL_FileEditSaved() {
 
 	// Dates - What a PAIN! (Needs Improvement)
 
-	eeSFL_FileDateAddedYearNew = jQuery('#eeSFL_FileDateAddedYearNew').val();
+	var eeSFL_FileDateAddedYearNew = jQuery('#eeSFL_FileDateAddedYearNew').val();
 	if(eeSFL_FileDateAddedYearOld == eeSFL_FileDateAddedYearNew) { eeSFL_FileDateAddedYearNew = false; } else { eeChanged = true; }
 
-	eeSFL_FileDateAddedMonthNew = jQuery('#eeSFL_FileDateAddedMonthNew').val();
+	var eeSFL_FileDateAddedMonthNew = jQuery('#eeSFL_FileDateAddedMonthNew').val();
 	if(eeSFL_FileDateAddedMonthOld == eeSFL_FileDateAddedMonthNew) { eeSFL_FileDateAddedMonthNew = false; } else { eeChanged = true; }
 
-	eeSFL_FileDateAddedDayNew = jQuery('#eeSFL_FileDateAddedDayNew').val();
+	var eeSFL_FileDateAddedDayNew = jQuery('#eeSFL_FileDateAddedDayNew').val();
 	if(eeSFL_FileDateAddedDayOld == eeSFL_FileDateAddedDayNew) { eeSFL_FileDateAddedDayNew = false; } else { eeChanged = true; }
 
+	var eeSFL_FileDateAddedYear, eeSFL_FileDateAddedMonth, eeSFL_FileDateAddedDay;
 	if(eeSFL_FileDateAddedYearNew != false || eeSFL_FileDateAddedMonthNew != false || eeSFL_FileDateAddedDayNew != false) {
 		if(eeSFL_FileDateAddedYearNew == false) { eeSFL_FileDateAddedYear = eeSFL_FileDateAddedYearOld; } else { eeSFL_FileDateAddedYear = eeSFL_FileDateAddedYearNew; }
 		if(eeSFL_FileDateAddedMonthNew == false) { eeSFL_FileDateAddedMonth = eeSFL_FileDateAddedMonthOld; } else { eeSFL_FileDateAddedMonth = eeSFL_FileDateAddedMonthNew; }
@@ -341,15 +352,16 @@ function eeSFL_FileEditSaved() {
 		eeSFL_FileDateAddedNew = '';
 	}
 
-	eeSFL_FileDateChangedYearNew = jQuery('#eeSFL_FileDateChangedYearNew').val();
+	var eeSFL_FileDateChangedYearNew = jQuery('#eeSFL_FileDateChangedYearNew').val();
 	if(eeSFL_FileDateChangedYearOld == eeSFL_FileDateChangedYearNew) { eeSFL_FileDateChangedYearNew = false; } else { eeChanged = true; }
 
-	eeSFL_FileDateChangedMonthNew = jQuery('#eeSFL_FileDateChangedMonthNew').val();
+	var eeSFL_FileDateChangedMonthNew = jQuery('#eeSFL_FileDateChangedMonthNew').val();
 	if(eeSFL_FileDateChangedMonthOld == eeSFL_FileDateChangedMonthNew) { eeSFL_FileDateChangedMonthNew = false; } else { eeChanged = true; }
 
-	eeSFL_FileDateChangedDayNew = jQuery('#eeSFL_FileDateChangedDayNew').val();
+	var eeSFL_FileDateChangedDayNew = jQuery('#eeSFL_FileDateChangedDayNew').val();
 	if(eeSFL_FileDateChangedDayOld == eeSFL_FileDateChangedDayNew) { eeSFL_FileDateChangedDayNew = false; } else { eeChanged = true; }
 
+	var eeSFL_FileDateChangedYear, eeSFL_FileDateChangedMonth, eeSFL_FileDateChangedDay;
 	if(eeSFL_FileDateChangedYearNew != false || eeSFL_FileDateChangedMonthNew != false || eeSFL_FileDateChangedDayNew != false) {
 		if(eeSFL_FileDateChangedYearNew == false) { eeSFL_FileDateChangedYear = eeSFL_FileDateChangedYearOld; } else { eeSFL_FileDateChangedYear = eeSFL_FileDateChangedYearNew; }
 		if(eeSFL_FileDateChangedMonthNew == false) { eeSFL_FileDateChangedMonth = eeSFL_FileDateChangedMonthOld; } else { eeSFL_FileDateChangedMonth = eeSFL_FileDateChangedMonthNew; }

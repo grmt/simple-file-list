@@ -1694,14 +1694,15 @@ class eeSFL_MainClass {
 		        return FALSE;
 	        }
 		}
-
-		return FALSE;
 	}
 
 
 
 
 	private function eeSFL_CreateVideoThumbnail($eeFileFullPath) { // Expects Full Path
+
+		// SECURITY: only absolute paths reach the shell, so a name can never be read as a command-line option
+		if( !path_is_absolute($eeFileFullPath) ) { return FALSE; }
 
 		// All The Path Parts
 		$eePathParts = pathinfo($eeFileFullPath);
@@ -1750,6 +1751,9 @@ class eeSFL_MainClass {
 	// Generate PDF Thumbnails
 	private function eeSFL_CreatePDFThumbnail($eeFileFullPath) { // Expects Full Path
 
+		// SECURITY: only absolute paths reach the shell, so a name can never be read as a command-line option
+		if( !path_is_absolute($eeFileFullPath) ) { return FALSE; }
+
 		eeSFL_Debug_Log("Generating PDF Thumbnail...", 'General');
 
 		$eePathParts = pathinfo($eeFileFullPath);
@@ -1792,7 +1796,7 @@ class eeSFL_MainClass {
 
 				// Check PDF Validity
 				// SECURITY: escape paths — files placed in the list directory outside the uploader keep their raw names.
-				$eeCommand = 'gs -dNOPAUSE -dBATCH -sDEVICE=nullpage ' . escapeshellarg($eeFileFullPath);
+				$eeCommand = 'gs -dSAFER -dNOPAUSE -dBATCH -sDEVICE=nullpage ' . escapeshellarg($eeFileFullPath);
 
 				// Run the Command. Drum roll please
 				exec( $eeCommand, $eeCommandOutput, $eeReturnVal );
@@ -1801,7 +1805,7 @@ class eeSFL_MainClass {
 
 					// The command. AVOID LINE BREAKS
 					// $eeCommand = 'gs -dNOPAUSE -sDEVICE=png16m -dGraphicsAlphaBits=' . $eeBits . ' -dTextAlphaBits=' . $eeBits . ' -r' . $eeResolution . ' -dFirstPage=1 -dLastPage=1 -sOutputFile=' . $eeTempFileFullPath . ' ' . $eeFileFullPath;
-					$eeCommand = 'gs -dNOPAUSE -sDEVICE=jpeg -dJPEGQ=' . $eeQuality . ' -dQFactor=' . $eeQFactor . ' -r' . $eeResolution . ' -dFirstPage=1 -dLastPage=1 -sOutputFile=' . escapeshellarg($eeTempFileFullPath) . ' ' . escapeshellarg($eeFileFullPath);
+					$eeCommand = 'gs -dSAFER -dNOPAUSE -dBATCH -sDEVICE=jpeg -dJPEGQ=' . $eeQuality . ' -dQFactor=' . $eeQFactor . ' -r' . $eeResolution . ' -dFirstPage=1 -dLastPage=1 -sOutputFile=' . escapeshellarg($eeTempFileFullPath) . ' ' . escapeshellarg($eeFileFullPath);
 
 					// Run the Command. Drum roll please
 					exec( $eeCommand, $eeCommandOutput, $eeReturnVal );
@@ -2330,7 +2334,7 @@ class eeSFL_MainClass {
 
 
 	// Detect upward path traversal
-	function eeSFL_DetectUpwardTraversal($eeFilePath) { // Relative to site root
+	public function eeSFL_DetectUpwardTraversal($eeFilePath) { // Relative to site root
 
 		eeSFL_Debug_Log("Traversal check started for: " . $eeFilePath, 'Security', $this->eeListID);
 

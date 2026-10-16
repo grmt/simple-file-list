@@ -42,7 +42,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 		), $atts );
 
 	// Extract attributes into variables
-	extract($atts);
+	extract($atts); // phpcs:ignore WordPress.PHP.DontExtract.extract_extract -- keys are limited to the shortcode_atts() whitelist above
 
 	if($atts && array_filter($atts)) { // Only log if actual attributes were provided
 
@@ -56,7 +56,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 		 $eeOutput .= '
 		<!-- Shortcode: ' . $eeShortcode . ' List Run: #' . $eeSFL->eeListRun . ' -->';
 
-		extract($atts);
+		extract($atts); // phpcs:ignore WordPress.PHP.DontExtract.extract_extract -- keys are limited to the shortcode_atts() whitelist above
 
 		eeSFL_Debug_Log("Frontend shortcode processing - List: $list", 'Shortcode', $list);
 
