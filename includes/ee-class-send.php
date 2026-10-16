@@ -3,7 +3,7 @@
 // Author: Mitchell Bennis | support@simplefilelist.com | https://simplefilelist.com
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
-if ( ! defined( 'WP_CONTENT_DIR' ) ) exit; // Exit if accessed directly
+if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 class eeSFLE_class {
 
