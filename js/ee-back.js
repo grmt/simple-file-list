@@ -8,6 +8,7 @@ var eeSFL_FileID = 0;
 var eeAttsObject = new Object();
 var eeOption = '';
 var eeValue = '';
+var eeSetTo = '';
 var eeNewOption = '';
 var eeNewSetTo = '';
 var eeAttsArray = '';

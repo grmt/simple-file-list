@@ -286,7 +286,7 @@ class eeSFL_UploadClass {
 				eeSFL_Debug_Log("Re-sanitized for hash: '" . $eeSanitizedFileName . "'", 'Upload', $eeObject->eeListID);
 
 				// Use the extracted filename (which is actually the sanitized filename) for hash consistency
-				$eeHashKey = 'eeSFL-Renamed-' . md5($eeSanitizedFileName . $eeListID);					// Debug logging for processing phase
+				$eeHashKey = 'eeSFL-Renamed-' . hash('sha256', $eeSanitizedFileName . $eeListID);					// Debug logging for processing phase
 				eeSFL_Debug_Log("PROCESSING PHASE - Original: " . $eeOriginalFileName . " | Hash: " . $eeHashKey, 'UPLOAD_HASH');
 
 				$eeFileSanitized = get_transient($eeHashKey);
@@ -561,6 +561,10 @@ class eeSFL_UploadClass {
 		$eeFileUploadDirRaw = filter_input(INPUT_POST, 'eeSFL_FileUploadDir', FILTER_SANITIZE_FULL_SPECIAL_CHARS) ?? '';
 		$eePostUploadDir = $eeFileUploadDirRaw ? sanitize_text_field(urldecode($eeFileUploadDirRaw)) : '';
 		if(!empty($eePostUploadDir)) {
+			if(strpos(str_replace('\\', '/', $eePostUploadDir), '..') !== FALSE) {
+				eeSFL_Debug_Log("Upload denied: traversal in sub-folder '" . $eePostUploadDir . "'", 'ERROR', $eeObject->eeListID);
+				return 'ERROR 99';
+			}
 			$eeFileUploadDir .= $eePostUploadDir;
 		}
 
@@ -647,7 +651,7 @@ class eeSFL_UploadClass {
 					// IMPORTANT: Use the original sanitized filename, NOT the final renamed filename
 					// This ensures the processing phase can find the transient with the same hash key
 
-					$eeHashKey = 'eeSFL-Renamed-' . md5($eeOriginalSanitizedFileName . $eeListID);
+					$eeHashKey = 'eeSFL-Renamed-' . hash('sha256', $eeOriginalSanitizedFileName . $eeListID);
 					$eeNewFilePath = str_replace($eeObject->eeListSettings['FileListDir'], '', $eeTargetFile); // Strip the FileListDir
 
 					eeSFL_Debug_Log("Uploading -> Original: " . $eeRawFileName . " | Sanitized: " . $eeOriginalSanitizedFileName . " | Final: " . $eeFileName . " | Hash: " . $eeHashKey, 'UPLOAD_HASH');

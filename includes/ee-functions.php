@@ -61,6 +61,18 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
  */
 function eeSFL_FileSystem($mode, $params = array()) {
 
+	// SECURITY: Every path must resolve inside the WordPress install. This is the single
+	// chokepoint for all file operations, so callers cannot be tricked into touching files
+	// elsewhere via ../ sequences or symlinks. Uploaded temp files are the only exception.
+	foreach ( array('from', 'to', 'file', 'path') as $eeKey ) {
+		if ( ! isset($params[$eeKey]) ) { continue; }
+		if ( $eeKey === 'from' && is_uploaded_file($params['from']) ) { continue; }
+		if ( ! eeSFL_IsAllowedPath($params[$eeKey]) ) {
+			eeSFL_Debug_Log("BLOCKED path outside allowed roots: " . $params[$eeKey], 'Security');
+			return array('success' => false, 'data' => null, 'error' => 'Path is outside the allowed directories');
+		}
+	}
+
 	// Try to initialize WP_Filesystem (preferred — Plugin Check compliant)
 	// On managed hosts (e.g. Pressable, Kinsta, WP Engine) WP_Filesystem() returns false
 	// because no FTP/SSH credentials are available at runtime. In that case we fall through
@@ -228,6 +240,63 @@ function eeSFL_FileSystem($mode, $params = array()) {
 
 
 /**
+ * Check that a path resolves inside the WordPress install (site root, ABSPATH or wp-content).
+ *
+ * The path does not need to exist yet: the nearest existing parent is resolved with
+ * realpath() (which also follows symlinks) and the remaining segments must not climb up.
+ *
+ * @param string $eePath Absolute path to check
+ * @return bool True if the path is inside an allowed root
+ */
+function eeSFL_IsAllowedPath($eePath) {
+
+	if ( ! is_string($eePath) || $eePath === '' || strpos($eePath, "\0") !== false ) {
+		return false;
+	}
+
+	$eePath = str_replace('\\', '/', $eePath);
+	$eeRemainder = array();
+	$eeExisting = rtrim($eePath, '/');
+
+	// Walk up to the nearest existing ancestor
+	while ( $eeExisting !== '' && ! file_exists($eeExisting) ) {
+		$eeSegment = basename($eeExisting);
+		if ( $eeSegment === '..' ) { return false; }
+		array_unshift($eeRemainder, $eeSegment);
+		$eeParent = dirname($eeExisting);
+		if ( $eeParent === $eeExisting ) { break; }
+		$eeExisting = $eeParent;
+	}
+
+	$eeReal = realpath($eeExisting === '' ? '/' : $eeExisting);
+	if ( $eeReal === false ) { return false; }
+	$eeReal = rtrim(str_replace('\\', '/', $eeReal), '/') . '/';
+
+	// Allowed roots. Avoid eeSFL_GetRootPath() here: it calls eeSFL_FileSystem() itself.
+	$eeRoots = array(ABSPATH, WP_CONTENT_DIR);
+	if ( defined('WP_PLUGIN_DIR') ) { $eeRoots[] = WP_PLUGIN_DIR; }
+	if ( defined('eeSFL_WP_ROOT') ) {
+		$eeRoots[] = eeSFL_WP_ROOT;
+	} elseif ( function_exists('get_transient') && ($eeCachedRoot = get_transient('eeSFL_root_path')) ) {
+		$eeRoots[] = $eeCachedRoot;
+	}
+
+	foreach ( $eeRoots as $eeRoot ) {
+		$eeRootReal = realpath($eeRoot);
+		if ( $eeRootReal === false ) { continue; }
+		$eeRootReal = rtrim(str_replace('\\', '/', $eeRootReal), '/') . '/';
+		if ( strpos($eeReal, $eeRootReal) === 0 ) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+
+
+/**
  * Ensure File List Directory Exists
  *
  * Creates the file list directory if it doesn't exist, even if database entries remain.
@@ -293,6 +362,8 @@ function eeSFL_EnsureFileListDirExists($eeListID = 1) {
 
 // Update a Settings Option
 function eeSFL_UpdateSetting($eeSetting, $eeValue, $eeReturn = FALSE) {
+
+	global $eeSFL;
 
 	if(isset($eeSFL->eeListSettings[$eeSetting])) {
 		$eeSFL->eeListSettings[$eeSetting] = $eeValue;
@@ -1878,7 +1949,7 @@ function eeSFL_SetAdminTitle() {
 	$current_screen = get_current_screen();
 
 	if ($current_screen && $current_screen->id === 'toplevel_page_' . eeSFL_PluginSlug) {
-		$title = __('Simple File List', 'simple-file-list');
+		$title = __('Simple File List', 'simple-file-list'); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- setting the admin page title is the purpose of this function
 	}
 }
 

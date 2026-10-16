@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: PHP ${{ matrix.php }} lint
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.1', '8.2', '8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v5
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      - name: Syntax check
+        run: find . -path ./vendor -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
+
+  phpcs:
+    name: WordPress coding standards
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+          tools: cs2pr
+      - run: composer install --no-interaction --no-progress
+      - name: PHPCS (WordPress security, API and PHP compatibility)
+        run: vendor/bin/phpcs -q --report=checkstyle | cs2pr --graceful-warnings
+
+  plugin-check:
+    name: WordPress Plugin Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: wordpress/plugin-check-action@v1
+        with:
+          exclude-directories: 'vendor,tests,.github'
+          exclude-files: 'composer.json,composer.lock,phpunit.xml.dist,phpcs.xml.dist,.sonarcloud.properties,.gitignore,.distignore,agent.md,README.md'
+          # The plugin is closed on WordPress.org, so the listing-only "Tested up to" check
+          # would just turn CI red at every WordPress release.
+          ignore-codes: 'outdated_tested_upto_header'
+
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: pcov
+      - run: composer install --no-interaction --no-progress
+      - name: PHPUnit with coverage
+        run: vendor/bin/phpunit --coverage-text

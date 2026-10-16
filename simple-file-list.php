@@ -126,7 +126,7 @@ function eeSFL_Setup() {
 	} // end is_admin()
 
 	// Define debug logging stub (no-op on frontend; real implementation provided by Tools plugin above)
-	if(!function_exists('eeSFL_Debug_Log')) { function eeSFL_Debug_Log($eeString) { return FALSE; } }
+	if(!function_exists('eeSFL_Debug_Log')) { function eeSFL_Debug_Log($eeString, $eeCategory = '', $eeListID = 0) { return FALSE; } }
 	eeSFL_Debug_Log("Simple File List v" . eeSFL_Version . " initializing", 'Loading');
 
 	// Translation strings to pass to javascript as eesfl_vars

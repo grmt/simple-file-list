@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<ruleset name="Simple File List">
+	<description>WordPress security, API and PHP compatibility checks.</description>
+
+	<file>.</file>
+	<exclude-pattern>/vendor/*</exclude-pattern>
+	<exclude-pattern>/tests/*</exclude-pattern>
+	<exclude-pattern>/node_modules/*</exclude-pattern>
+
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+	<config name="ignore_warnings_on_exit" value="1"/>
+
+	<config name="testVersion" value="8.1-"/>
+	<config name="minimum_wp_version" value="6.0"/>
+
+	<!-- Security and WordPress API correctness. Formatting sniffs (WordPress-Core) are
+	     left out on purpose: the upstream code does not follow them and reformatting
+	     everything would bury real changes. -->
+	<rule ref="WordPress.Security"/>
+	<rule ref="WordPress.DB"/>
+	<rule ref="WordPress.WP">
+		<exclude name="WordPress.WP.CapitalPDangit"/>
+	</rule>
+	<rule ref="WordPress.PHP">
+		<exclude name="WordPress.PHP.YodaConditions"/>
+		<exclude name="WordPress.PHP.POSIXFunctions"/>
+	</rule>
+	<!-- Thumbnails shell out to ffmpeg / ghostscript on purpose; arguments are escaped. -->
+	<rule ref="WordPress.PHP.DiscouragedPHPFunctions.system_calls_exec">
+		<type>warning</type>
+	</rule>
+	<rule ref="WordPress.PHP.DiscouragedPHPFunctions.system_calls_shell_exec">
+		<type>warning</type>
+	</rule>
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="simple-file-list"/>
+			</property>
+		</properties>
+	</rule>
+	<rule ref="PHPCompatibilityWP"/>
+</ruleset>
