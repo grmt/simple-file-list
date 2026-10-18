@@ -47,9 +47,9 @@ jobs:
         with:
           exclude-directories: 'vendor,tests,.github'
           exclude-files: 'composer.json,composer.lock,phpunit.xml.dist,phpcs.xml.dist,.sonarcloud.properties,.gitignore,.distignore,agent.md,README.md'
-          # The plugin is closed on WordPress.org, so the listing-only "Tested up to" check
-          # would just turn CI red at every WordPress release.
-          ignore-codes: 'outdated_tested_upto_header'
+          # The plugin is closed on WordPress.org and maintained via GitHub Releases (Update URI),
+          # so ignore listing-only "Tested up to" and WP.org directory "plugin_updater_detected" checks.
+          ignore-codes: 'outdated_tested_upto_header,plugin_updater_detected'
 
   test:
     name: Unit tests

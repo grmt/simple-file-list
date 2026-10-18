@@ -54,7 +54,7 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 		eeSFL_Debug_Log('- Shortcode: ' . $eeShortcode, 'Shortcode', $eeSFL->eeListID);
 
 		 $eeOutput .= '
-		<!-- Shortcode: ' . $eeShortcode . ' List Run: #' . $eeSFL->eeListRun . ' -->';
+		<!-- Shortcode: ' . esc_html(str_replace('--', '', $eeShortcode)) . ' List Run: #' . intval($eeSFL->eeListRun) . ' -->';
 
 		extract($atts); // phpcs:ignore WordPress.PHP.DontExtract.extract_extract -- keys are limited to the shortcode_atts() whitelist above
 
@@ -155,6 +155,21 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 		}
 	}
 
+	// Who Can Upload? (Evaluated before eeSFL_UploadCheck so unauthorized POSTs are rejected)
+	switch ($eeSFL->eeListSettings['AllowUploads']) {
+	    case 'YES':
+	        break; // Show It
+	    case 'USER':
+	        // Show It If...
+	        if( get_current_user_id() ) { break; } else { $eeSFL->eeListSettings['AllowUploads'] = 'NO'; }
+	    case 'ADMIN':
+	        // Show It If...
+	        if(current_user_can('manage_options')) { break; } else { $eeSFL->eeListSettings['AllowUploads'] = 'NO'; }
+	        break;
+		default:
+			$eeSFL->eeListSettings['AllowUploads'] = 'NO'; // Show Nothing
+	}
+
 	$eeDependents = array('jquery'); // Requires jQuery
 
 	if($eeSFL->eeListRun == 1) {
@@ -193,8 +208,10 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 			wp_enqueue_style('ee-simple-file-list-css-table');
 		}
 
-		// Upload Check
-		$eeSFL_Uploaded = $eeSFLU->eeSFL_UploadCheck($eeSFL->eeListRun);
+		// Upload Check (only if uploads are permitted)
+		if($eeSFL->eeListSettings['AllowUploads'] != 'NO') {
+			$eeSFL_Uploaded = $eeSFLU->eeSFL_UploadCheck($eeSFL->eeListRun);
+		}
 
 	}
 
@@ -210,21 +227,6 @@ function eeSFL_FrontEnd($atts, $content = null) { // Shortcode Usage: [eeSFL]
 		}
 	}
 	// Begin Front-End List Display ==================================================================
-
-	// Who Can Upload?
-	switch ($eeSFL->eeListSettings['AllowUploads']) {
-	    case 'YES':
-	        break; // Show It
-	    case 'USER':
-	        // Show It If...
-	        if( get_current_user_id() ) { break; } else { $eeSFL->eeListSettings['AllowUploads'] = 'NO'; }
-	    case 'ADMIN':
-	        // Show It If...
-	        if(current_user_can('manage_options')) { break; } else { $eeSFL->eeListSettings['AllowUploads'] = 'NO'; }
-	        break;
-		default:
-			$eeSFL->eeListSettings['AllowUploads'] = 'NO'; // Show Nothing
-	}
 
 
 	$eeShowUploadForm = FALSE;

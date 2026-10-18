@@ -94,13 +94,13 @@ class eeSFL_UploadClass {
 		<p id="eeSFL_FilesDrug"></p>
 
 		<script>
-		var eeSFL_ListID = "' . $eeListID . '";
-		var eeSFL_FileUploadDir = "' . urlencode($eeObject->eeCurrentFolder) . '";
-		var eeSFL_FileLimit = ' . $eeObject->eeListSettings['UploadLimit'] . ';
-		var eeSFL_UploadMaxFileSize = ' . (($eeObject->eeListSettings['UploadMaxFileSize']*1024)*1024) . ';
-		var eeSFL_FileFormats = "' . str_replace(' ' , '', $eeObject->eeListSettings['FileFormats']) . '";
-		var eeSFL_Nonce = "' . wp_create_nonce('ee-simple-file-list-upload') . '";
-		var eeSFL_UploadEngineURL = "' . admin_url( 'admin-ajax.php') . '";
+		var eeSFL_ListID = "' . intval($eeListID) . '";
+		var eeSFL_FileUploadDir = "' . esc_js(urlencode($eeObject->eeCurrentFolder)) . '";
+		var eeSFL_FileLimit = ' . intval($eeObject->eeListSettings['UploadLimit']) . ';
+		var eeSFL_UploadMaxFileSize = ' . intval(($eeObject->eeListSettings['UploadMaxFileSize']*1024)*1024) . ';
+		var eeSFL_FileFormats = "' . esc_js(str_replace(' ' , '', $eeObject->eeListSettings['FileFormats'])) . '";
+		var eeSFL_Nonce = "' . esc_js(wp_create_nonce('ee-simple-file-list-upload')) . '";
+		var eeSFL_UploadEngineURL = "' . esc_url(admin_url( 'admin-ajax.php')) . '";
 		</script>
 
 		<span id="eeSFL_UploadProgress"><em class="eeHide">' . __('Processing the Upload', 'simple-file-list') . '</em></span>
@@ -109,13 +109,13 @@ class eeSFL_UploadClass {
 
 		if($eeObject->eeListSettings['ShowUploadLimits'] == 'YES') {
 
-			 $eeOutput .= '<p class="sfl_instuctions">' . __('File Limit', 'simple-file-list') . ': ' . $eeObject->eeListSettings['UploadLimit'] . ' ' . __('files', 'simple-file-list') . '<br />
+			 $eeOutput .= '<p class="sfl_instuctions">' . __('File Limit', 'simple-file-list') . ': ' . intval($eeObject->eeListSettings['UploadLimit']) . ' ' . __('files', 'simple-file-list') . '<br />
 
-			' . __('Size Limit', 'simple-file-list') . ': ' . $eeObject->eeListSettings['UploadMaxFileSize'] . ' MB
+			' . __('Size Limit', 'simple-file-list') . ': ' . intval($eeObject->eeListSettings['UploadMaxFileSize']) . ' MB
 
 			' . __('per file', 'simple-file-list') . '.<br />
 
-			' . __('Types Allowed', 'simple-file-list') . ': ' . str_replace(',', ', ', $eeObject->eeListSettings['FileFormats'])  . '<br />
+			' . __('Types Allowed', 'simple-file-list') . ': ' . esc_html(str_replace(',', ', ', $eeObject->eeListSettings['FileFormats']))  . '<br />
 
 			' . __('Drag-and-drop files here or use the Browse button.', 'simple-file-list') . '</p>';
 
@@ -158,6 +158,16 @@ class eeSFL_UploadClass {
 
 			if(isset($_POST['eeListID'])) {
 				$eeListID = absint(wp_unslash($_POST['eeListID']));
+			}
+
+			// Enforce AllowUploads policy for non-admin callers
+			if( !current_user_can('manage_options') ) {
+				$eeAllowUploads = $eeObject->eeListSettings['AllowUploads'] ?? 'NO';
+				if( $eeAllowUploads === 'USER' && !get_current_user_id() ) {
+					return FALSE;
+				} elseif( $eeAllowUploads !== 'YES' && $eeAllowUploads !== 'USER' ) {
+					return FALSE;
+				}
 			}
 
 			if( $eeListID >=1 ) { $this->eeSFL_ProcessUploadJob($eeListID); $eeObject->eeListID = $eeListID; }
@@ -524,6 +534,9 @@ class eeSFL_UploadClass {
 			return 'The File Object is Empty';
 		}
 
+		// Get this List's Settings before enforcing AllowUploads policy
+		$eeObject->eeSFL_GetSettings($eeListID);
+
 		// Enforce AllowUploads policy on every request.
 		// SECURITY: is_admin() returns TRUE on admin-ajax.php and cannot guard frontend AJAX uploads.
 		// Admins (manage_options) are always permitted; all other callers go through the policy check.
@@ -552,8 +565,6 @@ class eeSFL_UploadClass {
 			eeSFL_Debug_Log("Upload allowed: user has manage_options", 'Upload', $eeObject->eeListID);
 		}
 
-		// Get this List's Settings
-		$eeObject->eeSFL_GetSettings($eeListID);
 		$eeFileUploadDir = $eeObject->eeListSettings['FileListDir'];
 
 

@@ -33,11 +33,11 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 
 		 $eeOutput .= '
 
-		<article id="eeSFL_FileID-' . $eeFileID . '" class="eeSFL_Item">';
+		<article id="eeSFL_FileID-' . esc_attr($eeFileID) . '" class="eeSFL_Item">';
 
 		if($eeSFL->eeIsFolder) {
 			 $eeOutput .= '
-			<span class="eeSFL_FilePath eeHide">' . $eeSFL->eeFilePath . '</span>';
+			<span class="eeSFL_FilePath eeHide">' . esc_html($eeSFL->eeFilePath) . '</span>';
 		}
 
 		// Proper Path for Search Results
@@ -51,15 +51,15 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 			$eePath = $eePathInfo['dirname'];
 			if($eePath != '.') {
 				 $eeOutput .= '
-				<span class="eeSFL_RealFilePath eeHide">' . $eePath . '/</span>';
+				<span class="eeSFL_RealFilePath eeHide">' . esc_html($eePath . '/') . '</span>';
 			}
 			} // Close nonce verification block
 		}
 
 		 $eeOutput .= '
-		<span class="eeSFL_RealFileName eeHide">' . $eeSFL->eeRealFileName . '</span>
-		<span class="eeSFL_FileNiceName eeHide">' . $eeSFL->eeFileNiceName . '</span>
-		<span class="eeSFL_FileMimeType eeHide">' . $eeSFL->eeFileMIME . '</span>
+		<span class="eeSFL_RealFileName eeHide">' . esc_html($eeSFL->eeRealFileName) . '</span>
+		<span class="eeSFL_FileNiceName eeHide">' . esc_html($eeSFL->eeFileNiceName) . '</span>
+		<span class="eeSFL_FileMimeType eeHide">' . esc_html($eeSFL->eeFileMIME) . '</span>
 
 		<div class="eeSFL_FlexRow">';
 
@@ -67,7 +67,7 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 		// Thumbnail
 		if($eeAdmin OR $eeSFL->eeListSettings['ShowFileThumb'] == 'YES') {
 			if($eeSFL->eeFileThumbURL) {
-				 $eeOutput .= '<div class="eeSFL_Thumbnail"><a href="' . $eeSFL->eeFileURL .  '"><img src="' . $eeSFL->eeFileThumbURL . '" width="64" height="64" alt="Thumb" /></a></div>';
+				 $eeOutput .= '<div class="eeSFL_Thumbnail"><a href="' . esc_url($eeSFL->eeFileURL) .  '"><img src="' . esc_url($eeSFL->eeFileThumbURL) . '" width="64" height="64" alt="Thumb" /></a></div>';
 			}
 		}
 
@@ -83,21 +83,21 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 		if( ($eeShowOps OR $eeSFL->eeListSettings['AllowBulkFileDownload'] == 'YES') AND !$eeShowingResults) {
 			 $eeOutput .= '
 			<span class="eeSFL_BulkEdit">
-				<input type="checkbox" id="eeSFL_BulkEdit_' . $eeFileID . '"  class="eeSFL_BulkEditCheck" name="eeBulkEdit" value="' . $eeFileID . '"/></span> ';
+				<input type="checkbox" id="eeSFL_BulkEdit_' . esc_attr($eeFileID) . '"  class="eeSFL_BulkEditCheck" name="eeBulkEdit" value="' . esc_attr($eeFileID) . '"/></span> ';
 		}
 
-		 $eeOutput .= '<a class="eeSFL_FileName" href="' . $eeSFL->eeFileURL .  '"';
+		 $eeOutput .= '<a class="eeSFL_FileName" href="' . esc_url($eeSFL->eeFileURL) .  '"';
 
 		if($eeSFL->eeIsFile === TRUE) {  $eeOutput .= ' target="_blank"'; }
 
-		 $eeOutput .= '>' . stripslashes($eeSFL->eeFileName) . '</a>';
+		 $eeOutput .= '>' . esc_html(stripslashes($eeSFL->eeFileName)) . '</a>';
 
 		 $eeOutput .= '</h4>';
 
 
 		// File Description
 		if($eeSFL->eeListSettings['ShowFileDesc'] == 'NO' AND !$eeAdmin) { $eeClass = 'eeHide'; }
-		 $eeOutput .= '<p class="eeSFL_FileDesc ' . $eeClass . '">' . stripslashes($eeSFL->eeFileDescription) . '</p>'; // Always here for JS
+		 $eeOutput .= '<p class="eeSFL_FileDesc ' . esc_attr($eeClass) . '">' . esc_html(stripslashes($eeSFL->eeFileDescription)) . '</p>'; // Always here for JS
 
 
 		// Submitter Info
@@ -112,11 +112,11 @@ foreach($eeSFL->eeDisplayFiles as $eeFileID => $eeFileArray) { // <<<-----------
 			}
 		}
 		if($eeShowIt AND $eeSFL->eeFileSubmitterName) {
-		 $eeOutput .= '<p class="eeSFL_FileSubmitter"><span>' . $eeSFL->eeListSettings['LabelOwner'] . ': </span>';
+		 $eeOutput .= '<p class="eeSFL_FileSubmitter"><span>' . esc_html($eeSFL->eeListSettings['LabelOwner']) . ': </span>';
 		if($eeAdmin OR $eeSFL->eeListSettings['ShowSubmitterEmail'] == 'YES') {
-			 $eeOutput .= '<a href="mailto:' . $eeSFL->eeFileSubmitterEmail . '">' . stripslashes($eeSFL->eeFileSubmitterName) . '</a>';
+			 $eeOutput .= '<a href="mailto:' . esc_attr($eeSFL->eeFileSubmitterEmail) . '">' . esc_html(stripslashes($eeSFL->eeFileSubmitterName)) . '</a>';
 		} else {
-			 $eeOutput .= stripslashes($eeSFL->eeFileSubmitterName);
+			 $eeOutput .= esc_html(stripslashes($eeSFL->eeFileSubmitterName));
 		}
 		 $eeOutput .= '</p>';
 		$eeShowIt = FALSE;

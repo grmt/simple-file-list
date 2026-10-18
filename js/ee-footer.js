@@ -196,7 +196,7 @@ String.prototype.eeSFL_StripSlashes = function(){
 // Copy File URL to Clipboard
 function eeSFL_CopyLinkToClipboard(eeSFL_FileURL) {
 
-	var eeTemp = jQuery('<input name="eeTemp" value="' + eeSFL_FileURL + '" type="url" class="" id="eeTemp" />'); // Create a temporary input
+	var eeTemp = jQuery('<input name="eeTemp" type="url" class="" id="eeTemp" />').val(eeSFL_FileURL); // Create a temporary input
 	jQuery("body").append(eeTemp); // Add it to the bottom of the page
 
 	var eeTempInput = jQuery('#eeTemp');

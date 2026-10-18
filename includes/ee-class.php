@@ -11,7 +11,7 @@ class eeSFL_MainClass {
 
     public $eeExcludedFileNames = array('error_log', 'index.html', '__MACOSX', '_eeSFL_Thumbnails');
 
-    public $eeForbiddenTypes = array('php','phar','pl','py','com','cgi','asp','exe','js','phtml', 'wsh','vbs');
+    public $eeForbiddenTypes = array('php','php3','php4','php5','php7','php8','pht','phar','pl','py','com','cgi','asp','exe','js','phtml','wsh','vbs','inc','htm','html','svg','shtml','xhtml');
 
     public $eeDynamicImageThumbFormats = array('gif', 'jpg', 'jpeg', 'png', 'tif', 'tiff');
 
@@ -19,7 +19,7 @@ class eeSFL_MainClass {
 
     public $eeDefaultThumbFormats = array('3gp', 'ai', 'aif', 'aiff', 'apk', 'avi', 'bmp', 'cr2', 'dmg', 'doc', 'docx', 'eps', 'flv', 'gz', 'indd', 'iso', 'jpeg', 'jpg', 'm4v', 'mov', 'mp3', 'mp4', 'mpeg', 'mpg', 'pdf', 'png', 'pps', 'ppsx', 'ppt', 'pptx', 'psd', 'tar', 'tgz', 'tif', 'tiff', 'txt', 'wav', 'wma', 'wmv', 'xls', 'xlsx', 'zip', 'folder');
 
-	public $eeOpenableFileFormats = array('aif', 'aiff', 'avi', 'bmp', 'flv', 'jpeg', 'jpg', 'gif', 'm4v', 'mov', 'mp3', 'mp4', 'mpeg', 'mpg', 'pdf', 'png', 'txt', 'wav', 'wma', 'wmv', 'folder', 'htm', 'html');
+	public $eeOpenableFileFormats = array('aif', 'aiff', 'avi', 'bmp', 'flv', 'jpeg', 'jpg', 'gif', 'm4v', 'mov', 'mp3', 'mp4', 'mpeg', 'mpg', 'pdf', 'png', 'txt', 'wav', 'wma', 'wmv', 'folder');
 
 	public $eeFolderIcon = '&#128193;'; // Used when thumbnails are off.
 
@@ -394,13 +394,23 @@ class eeSFL_MainClass {
 		// that hasn't enabled the feature). Initialize it now so we have a valid path.
 		if(empty($this->eeTempDirectory)) { $this->eeSFL_TempDirectory(); }
 
-		if(is_dir($this->eeTempDirectory)) { return TRUE; } // Already exists, nothing to do
+		if(is_dir($this->eeTempDirectory)) {
+			$index_file = trailingslashit($this->eeTempDirectory) . 'index.html';
+			if(!file_exists($index_file)) {
+				eeSFL_FileSystem('put_contents', array('file' => $index_file, 'data' => '<!-- Simple File List -->'));
+			}
+			return TRUE;
+		} // Already exists, nothing to do
 
 		// The temp dir always lives inside wp-content/uploads which is natively writable.
 		// Use wp_mkdir_p() directly rather than eeSFL_FileListDirCheck(), which expects a
 		// path relative to eeSFL_WP_ROOT — a conversion that breaks on managed hosts like
 		// Pressable where ABSPATH (/wordpress/core/x.x.x/) differs from the uploads root.
 		if(wp_mkdir_p($this->eeTempDirectory)) {
+			$index_file = trailingslashit($this->eeTempDirectory) . 'index.html';
+			if(!file_exists($index_file)) {
+				eeSFL_FileSystem('put_contents', array('file' => $index_file, 'data' => '<!-- Simple File List -->'));
+			}
 			eeSFL_Debug_Log('Temp directory created: ' . $this->eeTempDirectory, 'General');
 			return TRUE;
 		}
@@ -555,7 +565,7 @@ class eeSFL_MainClass {
 			if(in_array($this->eeFileExt, $this->eeOpenableFileFormats)) {
 
 				 $eeOutput .= '
-				<a class="eeSFL_FileOpen" href="' . $this->eeFileURL . '" ';
+				<a class="eeSFL_FileOpen" href="' . esc_url($this->eeFileURL) . '" ';
 
 				if($this->eeIsFile) {  $eeOutput .= 'target="_blank"'; }
 
@@ -570,7 +580,7 @@ class eeSFL_MainClass {
 
 				// Javascript function submits to eeSFL_ListOpsBar() form processor as if this folder was the only one checked. Brilliant!
 				 $eeOutput .= '
-				<a class="eeSFL_FileDownload eeSFL_FolderDownload" href="#" onclick="eeSFL_DownloadFolder(' . $eeFileID . ', \'' . basename($this->eeFileName) . '\')">' . __('Download Zip', 'simple-file-list') . '</a>';
+				<a class="eeSFL_FileDownload eeSFL_FolderDownload" href="#" onclick="eeSFL_DownloadFolder(' . absint($eeFileID) . ', \'' . esc_js(basename($this->eeFileName)) . '\')">' . __('Download Zip', 'simple-file-list') . '</a>';
 			}
 
 		} else {
@@ -579,14 +589,14 @@ class eeSFL_MainClass {
 			if($eeAdmin OR $this->eeListSettings['ShowFileDownload'] == 'YES') {
 
 				 $eeOutput .= '
-				<a class="eeSFL_FileDownload" href="' . $this->eeFileURL;
+				<a class="eeSFL_FileDownload" href="' . esc_url($this->eeFileURL);
 
 				// Extension Check
 				if($eeSFLA) {  // File Access Manager
 					if(isset($this->eeListSettings['Mode']) && $this->eeListSettings['Mode'] != 'NORMAL') {  $eeOutput .= '&mode=download"'; }
-						else {  $eeOutput .= '" download="' . basename($this->eeFileURL) . '"'; } // Basic Download link
+						else {  $eeOutput .= '" download="' . esc_attr(basename($this->eeFileURL)) . '"'; } // Basic Download link
 				} else {
-					 $eeOutput .= '" download="' . basename($this->eeFileURL) . '"'; // Basic Download link
+					 $eeOutput .= '" download="' . esc_attr(basename($this->eeFileURL)) . '"'; // Basic Download link
 				}
 				 $eeOutput .= '>' . __('Download', 'simple-file-list') . '</a>';
 
@@ -596,7 +606,7 @@ class eeSFL_MainClass {
 			if($eeAdmin OR $this->eeListSettings['ShowFileCopyLink'] == 'YES') {
 
 				 $eeOutput .= '
-				<a class="eeSFL_CopyLinkToClipboard" onclick="eeSFL_CopyLinkToClipboard(\''  . $this->eeFileURL .   '\')" href="#">' . __('Copy Link', 'simple-file-list') . '</a>';
+				<a class="eeSFL_CopyLinkToClipboard" onclick="eeSFL_CopyLinkToClipboard(\''  . esc_js($this->eeFileURL) .   '\')" href="#">' . __('Copy Link', 'simple-file-list') . '</a>';
 			}
 		}
 

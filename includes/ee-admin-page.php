@@ -96,11 +96,13 @@ function eeSFL_BackEnd() {
 
 
 	    // Settings
-	     $eeOutput .= '
-	    <a href="?page=' . eeSFL_PluginSlug . '&tab=settings&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabSettings" class="nav-tab ';
-		if($active_tab == 'settings') { $eeOutput .= ' eeActiveTab '; }
-	    $active_tab == 'settings' ? 'nav-tab-active' : '';
-	     $eeOutput .= $active_tab . '">' . __('List Settings', 'simple-file-list') . '</a>';
+	    if(current_user_can('manage_options')) {
+		     $eeOutput .= '
+		    <a href="?page=' . eeSFL_PluginSlug . '&tab=settings&eeListID=' . $eeSFL->eeListID . '" id="eeSFL_TabSettings" class="nav-tab ';
+			if($active_tab == 'settings') { $eeOutput .= ' eeActiveTab '; }
+		    $active_tab == 'settings' ? 'nav-tab-active' : '';
+		     $eeOutput .= $active_tab . '">' . __('List Settings', 'simple-file-list') . '</a>';
+	    }
 
 
     } elseif($eeSFLA) {
@@ -282,7 +284,7 @@ function eeSFL_BackEnd() {
 		$eeSFL->eeAllFiles = array();
 		$eeSFL->eeDisplayFiles = array();
 
-	} elseif($active_tab == 'settings') {
+	} elseif($active_tab == 'settings' && current_user_can('manage_options')) {
 
 		// Sub Tabs
 		if( isset( $_GET[ 'subtab' ] ) ) { $active_subtab = esc_js(sanitize_text_field(wp_unslash($_GET['subtab']))); } // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation param, not form submission
