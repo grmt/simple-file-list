@@ -7,8 +7,8 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 eeSFL_Debug_Log("Loaded: Upload Settings", 'General');
 
-// Check for POST and Nonce
-if(isset($_POST['eePost']) && !empty(sanitize_text_field(wp_unslash($_POST['eePost']))) AND check_admin_referer( 'ee-simple-file-list-upload-settings', 'ee-simple-file-list-upload-settings-nonce')) {
+// Check for POST, Capability and Nonce
+if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanitize_text_field(wp_unslash($_POST['eePost']))) AND check_admin_referer( 'ee-simple-file-list-upload-settings', 'ee-simple-file-list-upload-settings-nonce')) {
 
 	if(!$eeSFLA) {
 

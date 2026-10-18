@@ -133,13 +133,12 @@ if( isset($_POST['eeSFL_ListOpsBarGo']) ) {
 					return;
 				}
 
-				// Define the zip file within the uploads-based temp directory
-				$eeZipFileName = eeSFL_TempDir . '/' . $zipFileName;
-				$eeZipFileURL = eeSFL_TempUrl . '/' . $zipFileName;
-
-				// Check for ZIP extension
-				if(substr($eeZipFileName, -4) != '.zip') { $eeZipFileName .= '.zip'; } // Add if needed
-				if(substr($eeZipFileURL, -4) != '.zip') { $eeZipFileURL .= '.zip'; } // Add if needed
+				// Define the zip file within the uploads-based temp directory with an unguessable token
+				$eeZipBase = (substr(strtolower($zipFileName), -4) === '.zip') ? substr($zipFileName, 0, -4) : $zipFileName;
+				if(!$eeZipBase) { $eeZipBase = 'File-Archive'; }
+				$eeRandomZipName = $eeZipBase . '-' . wp_generate_password(12, false, false) . '.zip';
+				$eeZipFileName = eeSFL_TempDir . '/' . $eeRandomZipName;
+				$eeZipFileURL = eeSFL_TempUrl . '/' . $eeRandomZipName;
 
 				// Delete if already exists
 				$eeZipFileCheck = eeSFL_FileSystem('is_file', array('file' => $eeZipFileName));
@@ -306,7 +305,7 @@ if( isset($_POST['eeSFL_ListOpsBarGo']) ) {
 				// All files are added, so close the zip file.
 				$eeZipObject->close();
 
-				$eeSFL->eeUserMessages['messages'][] = __('Download File', 'simple-file-list') . ' &rarr; <a class="button" id="eeSFL_DownloadArchiveButton" href="' . $eeZipFileURL . '" download="' . basename($eeZipFileName) . '">' . basename($eeZipFileName) . '</a></strong>';
+				$eeSFL->eeUserMessages['messages'][] = __('Download File', 'simple-file-list') . ' &rarr; <a class="button" id="eeSFL_DownloadArchiveButton" href="' . esc_url($eeZipFileURL) . '" download="' . esc_attr(basename($eeZipFileName)) . '">' . esc_html(basename($eeZipFileName)) . '</a></strong>';
 			}
 		}
 	}

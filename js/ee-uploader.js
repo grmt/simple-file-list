@@ -123,8 +123,16 @@ function eeSFL_AddFilesToQueue(eeSFL_Files) { // The files object
 			eeSFL_FileObjects.push(eeSFL_File); // Add this object
 			eeSFL_FileSet.push(eeSFL_File.name); // Add this name for the post-processor
 
-			// Upload Queue Display
-			var eeSFL_UploadQueue = '<p id="eeID' + i + '"><span class="eeSFL_FileUploadRemove" onclick="eeSFL_QueueRemove(' + i + ')">&#9746;</span><span class="eeSFL_FileUploadName">' + eeSFL_File.name + '</span><small><span class="eeSFL_FileUploadType">' + eeSFL_File.type + '</span> &rarr; <span class="eeSFL_FileUploadSize">' + eeSFL_GetFileSize(eeSFL_File.size) + '</span></small></p>';
+			// Upload Queue Display (using .text() to prevent DOM XSS via filenames)
+			var eeSFL_UploadQueue = jQuery('<p></p>').attr('id', 'eeID' + i)
+				.append(jQuery('<span class="eeSFL_FileUploadRemove">&#9746;</span>').attr('onclick', 'eeSFL_QueueRemove(' + i + ')'))
+				.append(jQuery('<span class="eeSFL_FileUploadName"></span>').text(eeSFL_File.name))
+				.append(
+					jQuery('<small></small>')
+						.append(jQuery('<span class="eeSFL_FileUploadType"></span>').text(eeSFL_File.type))
+						.append(' \u2192 ')
+						.append(jQuery('<span class="eeSFL_FileUploadSize"></span>').text(eeSFL_GetFileSize(eeSFL_File.size)))
+				);
 
 			// Populate the Upload Queue
 			jQuery('#eeSFL_FileUploadQueue').append(eeSFL_UploadQueue);

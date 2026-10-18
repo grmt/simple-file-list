@@ -9,8 +9,8 @@ eeSFL_Debug_Log("Loaded: Email Settings", 'General');
 
 // echo '<pre>'; print_r($_POST); echo '</pre>'; exit;
 
-// Check for POST and Nonce
-if(isset($_POST['eePost']) && !empty(sanitize_text_field(wp_unslash($_POST['eePost']))) AND check_admin_referer( 'ee-simple-file-list-settings', 'ee-simple-file-list-settings-nonce')) {
+// Check for POST, Capability and Nonce
+if(current_user_can('manage_options') && isset($_POST['eePost']) && !empty(sanitize_text_field(wp_unslash($_POST['eePost']))) AND check_admin_referer( 'ee-simple-file-list-settings', 'ee-simple-file-list-settings-nonce')) {
 
 	// YES/NO Checkboxes
 	$eeCheckboxes = array(

@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v6.3.12)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish Plugin ZIP
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Determine tag and version
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Package simple-file-list.zip
+        run: |
+          STAGE_DIR="$(mktemp -d)/simple-file-list"
+          mkdir -p "$STAGE_DIR"
+          rsync -a --exclude-from=.distignore --exclude=README.md ./ "$STAGE_DIR/"
+          (cd "$(dirname "$STAGE_DIR")" && zip -r "$GITHUB_WORKSPACE/simple-file-list.zip" simple-file-list)
+          ls -lh "$GITHUB_WORKSPACE/simple-file-list.zip"
+
+      - name: Create or Update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.meta.outputs.tag }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" simple-file-list.zip --clobber
+          else
+            gh release create "$TAG" simple-file-list.zip \
+              --title "Simple File List ${VERSION}" \
+              --generate-notes
+          fi

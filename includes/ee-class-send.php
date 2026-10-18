@@ -108,8 +108,8 @@ class eeSFLE_class {
 							 $eeOutput .= '
 
 							<tr>
-								<td class="eeSFLE_AddFileID_' . $eeKey . '"><input type="checkbox" name="eeSFLE_SendTheseFiles[]" value="' . urlencode($eeFileArray['FilePath']) . '"/></td>
-								<td>' . $eeFileNameDisplay . '</td>
+								<td class="eeSFLE_AddFileID_' . esc_attr($eeKey) . '"><input type="checkbox" name="eeSFLE_SendTheseFiles[]" value="' . esc_attr(urlencode($eeFileArray['FilePath'])) . '"/></td>
+								<td>' . esc_html($eeFileNameDisplay) . '</td>
 							</tr>';
 						}
 					}
@@ -157,7 +157,7 @@ class eeSFLE_class {
 		if(isset($_POST['id'])) {
 			// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Unslashing before sanitization on next line
 			$eeTemp = wp_unslash($_POST['id']);
-			$eeSFL->eeListID = sanitize_text_field($eeTemp);
+			$eeSFL->eeListID = absint(sanitize_text_field($eeTemp));
 			$eeSFL->eeSFL_GetSettings($eeSFL->eeListID);
 
 			if(!isset($eeSFL->eeListSettings['FileListDir'])) {
@@ -173,6 +173,32 @@ class eeSFLE_class {
 			eeSFL_Debug_Log("ERROR: Front-end file sending is disabled", 'Send', $eeSFL->eeListID);
 			return __('File sending is not enabled', 'simple-file-list');
 		}
+
+		// Enforce ShowList access rules for non-admin callers
+		if( !current_user_can('manage_options') ) {
+			switch ($eeSFL->eeListSettings['ShowList'] ?? 'NO') {
+				case 'YES':
+				case 'RESTRICTED':
+					break;
+				case 'USER':
+					if( !get_current_user_id() ) {
+						return __('File sending is not enabled', 'simple-file-list');
+					}
+					break;
+				default: // 'ADMIN', 'NO', or unknown
+					return __('File sending is not enabled', 'simple-file-list');
+			}
+		}
+
+		// Rate limit email sending per IP / user (max 10 emails per 15 minutes)
+		$eeCallerID = get_current_user_id() ? 'user_' . get_current_user_id() : 'ip_' . (isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : 'unknown');
+		$eeRateKey = 'eeSFL_SendRate_' . substr(hash('sha256', $eeCallerID), 0, 32);
+		$eeSendCount = (int) get_transient($eeRateKey);
+		if( $eeSendCount >= 10 ) {
+			eeSFL_Debug_Log("ERROR: Email send rate limit exceeded for " . $eeCallerID, 'Send', $eeSFL->eeListID);
+			return __('Too many emails sent. Please try again later.', 'simple-file-list');
+		}
+		set_transient($eeRateKey, $eeSendCount + 1, 15 * MINUTE_IN_SECONDS);
 
 		// From
 		if(isset($_POST['from'])) { // 1 Required
@@ -233,15 +259,36 @@ class eeSFLE_class {
 
 		if( is_array($eeFilesArray) ) { // The files array checkboxes
 
+			// Validate requested files against stored file list
+			$eeStoredFiles = get_option('eeSFL_FileList_' . $eeSFL->eeListID, array());
+			if(!is_array($eeStoredFiles)) { $eeStoredFiles = array(); }
+
 			foreach($eeFilesArray as $eeFile) {
+				$eeFileTrimmed = ltrim(trim($eeFile), '/');
+				if($eeFileTrimmed === '') { continue; }
+
+				$eeMatchedPath = FALSE;
+				foreach($eeStoredFiles as $eeStoredItem) {
+					if(!isset($eeStoredItem['FilePath']) || ($eeStoredItem['FileExt'] ?? '') === 'folder') { continue; }
+					if($eeStoredItem['FilePath'] === $eeFileTrimmed || basename($eeStoredItem['FilePath']) === $eeFileTrimmed) {
+						$eeMatchedPath = $eeStoredItem['FilePath'];
+						break;
+					}
+				}
+
+				if($eeMatchedPath === FALSE) { continue; }
 
 				if (isset($eeSFLA->eePluginName)) {
 					if($eeSFL->eeListSettings['Mode'] != 'Normal') {
-						$eeFileLinks .= $eeSFL->eeEnvironment['wpSiteURL'] . 'ee-get-file/?list=' . $eeSFL->eeListID . '&file=' . trim($eeFile) . PHP_EOL . PHP_EOL;
+						$eeFileLinks .= $eeSFL->eeEnvironment['wpSiteURL'] . 'ee-get-file/?list=' . $eeSFL->eeListID . '&file=' . rawurlencode($eeMatchedPath) . PHP_EOL . PHP_EOL;
 					}
 				} else {
-					$eeFileLinks .= $eeSFL->eeEnvironment['wpSiteURL'] . $eeSFL->eeListSettings['FileListDir'] . trim($eeFile) . PHP_EOL . PHP_EOL;
+					$eeFileLinks .= $eeSFL->eeEnvironment['wpSiteURL'] . $eeSFL->eeListSettings['FileListDir'] . $eeMatchedPath . PHP_EOL . PHP_EOL;
 				}
+			}
+
+			if( $eeFileLinks === '' ) {
+				return __('No Files to Send', 'simple-file-list');
 			}
 
 		} else {

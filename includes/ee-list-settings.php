@@ -5,8 +5,8 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 // License: GPLv2 or later | https://www.gnu.org/licenses/gpl-2.0.html
 
 
-// Check for POST and Nonce
-if(isset($_POST['eePost']) && sanitize_text_field(wp_unslash($_POST['eePost'])) && check_admin_referer( 'ee-simple-file-list-settings', 'ee-simple-file-list-settings-nonce')) {
+// Check for POST, Capability and Nonce
+if(current_user_can('manage_options') && isset($_POST['eePost']) && sanitize_text_field(wp_unslash($_POST['eePost'])) && check_admin_referer( 'ee-simple-file-list-settings', 'ee-simple-file-list-settings-nonce')) {
 
 	eeSFL_Debug_Log("Updating the List Settings", 'General');
 
@@ -119,7 +119,6 @@ if(isset($_POST['eePost']) && sanitize_text_field(wp_unslash($_POST['eePost'])) 
 		,'LabelSize'
 		,'LabelDesc'
 		,'LabelOwner'
-		,'AdminRole'
 		,'ShowListStyle'
 		,'ShowListTheme'
 		,'SortBy'

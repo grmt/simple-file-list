@@ -5,7 +5,7 @@ Tags: file manager, file sharing, share documents, document library, ftp alterna
 Requires at least: 6.0
 Requires PHP: 8.1
 Tested up to: 7.0
-Stable tag: 6.3.11
+Stable tag: 6.3.12
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -209,6 +209,7 @@ Absolutely. Reach out through the <a href="https://wordpress.org/support/plugin/
 
 == Upgrade Notice ==
 
+* 6.3.12 - Security hardening and XSS/access-control fixes.
 * 6.3.11 - Performance fix for sites with low memory limits. Recommended update for all users.
 
 
@@ -220,6 +221,14 @@ Absolutely. Reach out through the <a href="https://wordpress.org/support/plugin/
 
 
 == Changelog ==
+
+= 6.3.12 =
+* Security Fix: Escaped file names, descriptions, submitter metadata, and column labels across Table, Flex, and Tiles display templates to prevent Stored XSS.
+* Security Fix: Removed broken `&& !is_admin()` guard in settings input processors and enforced `manage_options` capability across all settings tabs.
+* Security Fix: Expanded forbidden file extension blocklist (`php3`–`php8`, `pht`, `inc`, `htm`, `html`, `svg`, `shtml`, `xhtml`) and enforced `AllowUploads` prior to upload job processing.
+* Security Fix: Added `ShowList` permission verification, file-list existence validation, and rate limiting to the email sharing handler.
+* Security Fix: Randomized temporary ZIP archive filenames and added `index.html` to the temporary directory.
+* Performance: Properly cached `ffmpeg`/`gs` binary checks in `eeSFL_CheckSupported()`.
 
 = 6.3.11 =
 * Performance: Admin-only WordPress files (`wp-admin/includes/plugin.php`) are no longer loaded on frontend page requests, reducing memory usage on every page with the shortcode.

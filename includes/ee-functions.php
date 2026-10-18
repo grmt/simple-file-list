@@ -382,9 +382,14 @@ function eeSFL_UpdateSetting($eeSetting, $eeValue, $eeReturn = FALSE) {
 
 
 
-function eeSFL_CheckSupported() {
+function eeSFL_CheckSupported($eeForce = FALSE) {
 
 	global $eeSFL;
+
+	// Avoid running shell_exec() on every page load if already checked
+	if ( ! $eeForce && get_option('eeSFL_Supported') !== false ) {
+		return TRUE;
+	}
 
 	// Check for supported technologies
 	$eeSupported = array();
@@ -416,14 +421,9 @@ function eeSFL_CheckSupported() {
 		}
 	}
 
-	// echo '<pre>'; print_r($eeSupported); echo '</pre>'; exit;
-
-	if(count($eeSupported)) {
-		update_option('eeSFL_Supported', $eeSupported);
-	}
+	update_option('eeSFL_Supported', $eeSupported);
 
 	return TRUE;
-
 
 }
 
@@ -751,9 +751,9 @@ function eeSFL_ValidateFileListDir($eeDir) {
 // Yes or No Settings Checkboxes
 function eeSFL_ProcessCheckboxInput($eeTerm) {
 
-	// Verify admin permissions for settings form submission (Missing nonce security)
+	// Verify admin permissions for settings form submission
 	// Note: Calling contexts should handle nonce verification before calling this function
-	if (!current_user_can('manage_options') && !is_admin()) {
+	if (!current_user_can('manage_options')) {
 		return 'NO'; // Default to NO if insufficient permissions
 	}
 
@@ -768,9 +768,9 @@ function eeSFL_ProcessCheckboxInput($eeTerm) {
 // Settings Text Inputs
 function eeSFL_ProcessTextInput($eeTerm, $eeType = 'text') {
 
-	// Verify admin permissions for settings form submission (Missing nonce security)
+	// Verify admin permissions for settings form submission
 	// Note: Calling contexts should handle nonce verification before calling this function
-	if (!current_user_can('manage_options') && !is_admin()) {
+	if (!current_user_can('manage_options')) {
 		return ''; // Return empty string if insufficient permissions
 	}
 
@@ -967,9 +967,13 @@ function eeSFL_DeleteFile($eeFileName, $eeSubFolder = FALSE) {
 	// Guards against path traversal in both $eeSubFolder (Pro) and $eeFileName.
 	$eeBaseDir = realpath(eeSFL_WP_ROOT . $eeSFL->eeListSettings['FileListDir']);
 	$eeRealPath = realpath($eeFilePath);
-	if( $eeBaseDir && $eeRealPath && strpos($eeRealPath, rtrim($eeBaseDir, '/') . '/') !== 0 ) { // Trailing slash: siblings like "simple-file-list-old/" are outside
-		eeSFL_Debug_Log("ERROR: Path traversal attempt blocked: '$eeFilePath'", 'FileOps', $eeSFL->eeListID);
-		return 'ERROR: Invalid path';
+	if( $eeBaseDir && $eeRealPath ) {
+		$eeBaseDirNorm = rtrim(str_replace('\\', '/', $eeBaseDir), '/') . '/';
+		$eeRealPathNorm = str_replace('\\', '/', $eeRealPath);
+		if( strpos($eeRealPathNorm, $eeBaseDirNorm) !== 0 ) { // Trailing slash: siblings like "simple-file-list-old/" are outside
+			eeSFL_Debug_Log("ERROR: Path traversal attempt blocked: '$eeFilePath'", 'FileOps', $eeSFL->eeListID);
+			return 'ERROR: Invalid path';
+		}
 	}
 
 	$eeMessages[] = $eeSFL->eeListSettings['FileListDir'] . $eeFileName;
