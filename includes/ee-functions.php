@@ -1373,6 +1373,14 @@ function eeSFL_FileEditor() {
 		return "Missing the File Name";
 	}
 
+	// SECURITY: The free version lists only the root directory, so a file name never contains a path.
+	// Reject separators and dot entries: the Edit actions (dates, nice name, description) build
+	// FileListDir . $eeFileName without a traversal check, so "../x" would reach files outside the list.
+	if( strpbrk($eeFileName, '/\\') !== FALSE || $eeFileName === '.' || $eeFileName === '..' ) {
+		eeSFL_Debug_Log("ERROR: File name contains a path: " . $eeFileName);
+		return "Invalid File Name";
+	}
+
 	// Subfolder support is a Pro feature — the free version always operates on the root directory.
 	// The eeSubFolder POST parameter is intentionally ignored here to eliminate the path traversal
 	// attack surface entirely (CVE-2026-11911). Pro: apply path traversal sanitization wherever
